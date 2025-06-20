@@ -1,83 +1,136 @@
-// app/ergebnis/[id]/page.tsx - FINALE VERSION MIT ANTWORT-ANZEIGE
+// app/spiel/[id]/page.tsx - FINALE VERSION
 
-"use client";
+"use client"; 
 
-import { useParams } from 'next/navigation';
-import { useEffect, useState, useRef } from 'react';
-import './ergebnis.css';
+import { useState, useEffect } from 'react';
+import { useParams, useRouter } from 'next/navigation';
+import './spiel.css';
+import Image from 'next/image';
+import type { Question } from '@/lib/questions';
 
-// ... (die 'interface'-Definitionen bleiben gleich) ...
+interface GameData {
+  questions: Question[];
+}
 
-export default function ErgebnisSeite() {
+export default function SpielSeite() {
   const params = useParams();
+  const router = useRouter();
   const gameId = params.id as string;
-  const [ergebnisse, setErgebnisse] = useState(null);
+
+  const [isModalOpen, setIsModalOpen] = useState(true);
+  const [isCopied, setIsCopied] = useState(false);
+  const [game, setGame] = useState<GameData | null>(null);
+  const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
+  const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState(null);
-  const intervalRef = useRef(null);
+  const [playerId] = useState(() => Math.random().toString(36).substring(2, 10));
 
   useEffect(() => {
     if (gameId) {
-      const fetchResults = async () => {
+      const fetchGameData = async () => {
+        setIsLoading(true);
         try {
-          const response = await fetch(`/api/games/${gameId}/results`);
+          const response = await fetch(`/api/games/${gameId}`);
           if (!response.ok) {
-            throw new Error('Ergebnisse konnten nicht geladen werden.');
+            const errorData = await response.json();
+            throw new Error(errorData.error || 'Spiel konnte nicht geladen werden.');
           }
           const data = await response.json();
-          setErgebnisse(data);
-        } catch (err) {
+          setGame(data);
+        } catch (err: any) {
           setError(err.message);
         } finally {
           setIsLoading(false);
         }
       };
-
-      fetchResults();
-      intervalRef.current = setInterval(fetchResults, 3000);
-
-      return () => clearInterval(intervalRef.current);
+      fetchGameData();
     }
   }, [gameId]);
 
+  const shareLink = typeof window !== 'undefined' ? `${window.location.origin}/spiel/${gameId}` : '';
+
+  const copyLinkToClipboard = () => {
+    navigator.clipboard.writeText(shareLink).then(() => {
+      setIsCopied(true);
+      setTimeout(() => setIsCopied(false), 2000);
+    });
+  };
+
+  const handleCloseModal = () => setIsModalOpen(false);
+
+  const handleAnswer = async (answer: string) => {
+    if (!game) return;
+    const questionId = game.questions[currentQuestionIndex].id;
+    try {
+      await fetch(`/api/games/${gameId}/answer`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ playerId, questionId, answer }),
+      });
+    } catch (error) {
+      console.error("Fehler beim Senden der Antwort:", error);
+    }
+    if (currentQuestionIndex < game.questions.length - 1) {
+      setCurrentQuestionIndex(currentQuestionIndex + 1);
+    } else {
+      router.push(`/ergebnis/${gameId}`);
+    }
+  };
+
   if (isLoading) {
-    return <div className="ergebnis-container"><h1>Ergebnisse werden geladen...</h1></div>;
+    return <div className="spiel-container"><div className="lade-text">Spiel wird geladen...</div></div>;
   }
   if (error) {
-    return <div className="ergebnis-container"><h1>Fehler: {error}</h1></div>;
+    return <div className="spiel-container"><div className="lade-text">Fehler: {error}</div></div>;
   }
-  if (!ergebnisse) {
-    return <div className="ergebnis-container"><h1>Keine Ergebnisse gefunden.</h1></div>;
+  if (!game) {
+    return <div className="spiel-container"><div className="lade-text">Keine Spieldaten gefunden.</div></div>;
   }
+  
+  const currentQuestion = game.questions[currentQuestionIndex];
+  if (!currentQuestion) {
+    // Dieser Fall wird jetzt durch die Weiterleitung in handleAnswer abgedeckt,
+    // ist aber eine gute Absicherung.
+    return <div className="spiel-container"><div className="lade-text">Du hast alle Fragen beantwortet!</div></div>;
+  }
+  
+  const progress = ((currentQuestionIndex + 1) / game.questions.length) * 100;
 
-  // Hier ist die entscheidende Änderung
-  if (!ergebnisse.isComplete) {
+  if (isModalOpen) {
     return (
-      <div className="ergebnis-container">
-        <h1>Du bist fertig!</h1>
-        <p>Hier ist eine Zusammenfassung deiner Antworten:</p>
-        <ul className="ergebnis-liste">
-          {ergebnisse.results.map((r, index) => (
-            <li className="ergebnis-item" key={index}>
-              <span className="question-text">{r.questionText}</span>
-              <div className="antworten-zeile">
-                <span className="your-answer">Deine Antwort: <strong>{r.playerA_answer}</strong></span>
-              </div>
-            </li>
-          ))}
-        </ul>
-        <div className="warte-box">
-          <h2>Warte auf dein Date...</h2>
-          <p>Die Seite aktualisiert sich automatisch, sobald die Ergebnisse da sind.</p>
+      <>
+        <div className="modal-overlay">
+          <div className="modal-content">
+            <h2>Dein Date einladen!</h2>
+            <p>Kopier diesen Link und schick ihn an die Person, mit der du spielen willst.</p>
+            <div className="link-container">
+              <input type="text" value={shareLink} readOnly />
+              <button className="copy-button" onClick={copyLinkToClipboard}>
+                {isCopied ? <Image src="/check-icon.svg" alt="Kopiert!" width={20} height={20} /> : <Image src="/copy-icon.svg" alt="Kopieren" width={20} height={20} />}
+              </button>
+            </div>
+            <div className="action-buttons">
+              <button onClick={handleCloseModal} className="close-button">Spiel starten!</button>
+            </div>
+          </div>
         </div>
-      </div>
+        <div className={`copy-toast ${isCopied ? 'show' : ''}`}>Link kopiert!</div>
+      </>
     );
   }
-
-  // Finale Auswertung
+  
   return (
-    <div className="ergebnis-container">
-      {/* ... */}
+    <div className="spiel-container">
+      <div className="progress-bar-container">
+        <div className="progress-bar" style={{ width: `${progress}%` }}></div>
+      </div>
+      <main className="frage-main">
+        <h1 className="frage-text">{currentQuestion.optionA} oder {currentQuestion.optionB}?</h1>
+      </main>
+      <div className="antwort-grid">
+        <button className="antwort-button" onClick={() => handleAnswer(currentQuestion.optionA)}>{currentQuestion.optionA}</button>
+        <button className="antwort-button" onClick={() => handleAnswer(currentQuestion.optionB)}>{currentQuestion.optionB}</button>
+      </div>
     </div>
   );
 }
