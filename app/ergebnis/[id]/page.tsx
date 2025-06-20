@@ -31,11 +31,17 @@ export default function ErgebnisSeite() {
             if (intervalRef.current) clearInterval(intervalRef.current);
             setIsLoading(false);
           }
-        } catch (err) {
+        // ...
+      } catch (err) {
+        if (err instanceof Error) {
           setError(err.message);
-          if (intervalRef.current) clearInterval(intervalRef.current);
-          setIsLoading(false);
+        } else {
+          setError('Ein unbekannter Fehler ist aufgetreten.');
         }
+        if (intervalRef.current) clearInterval(intervalRef.current);
+        setIsLoading(false);
+      }
+      // ...
       };
 
       fetchResults();
