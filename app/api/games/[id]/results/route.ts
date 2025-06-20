@@ -1,4 +1,4 @@
-// app/api/games/[id]/results/route.ts - FINALE KORREKTUR
+// app/api/games/[id]/results/route.ts
 
 import { NextResponse } from 'next/server';
 import { games } from '@/lib/gameStore';
@@ -7,13 +7,12 @@ import type { Question } from '@/lib/questions';
 
 export const dynamic = 'force-dynamic';
 
-// Die korrekte Signatur für eine GET-Route
 export async function GET(
   request: Request,
-  context: { params: { id: string } }
+  { params }: { params: { id: string } }
 ) {
   try {
-    const gameId = context.params.id; // Zugriff über context.params
+    const gameId = params.id;
     const game = games[gameId];
 
     if (!game) {
@@ -25,7 +24,6 @@ export async function GET(
     const playerBAnswers = game.answers.playerB || [];
 
     if (playerAAnswers.length < totalQuestions || playerBAnswers.length < totalQuestions) {
-      // ... (Rest der Logik für den Warte-Modus bleibt gleich)
       const originalQuestions = questionPacks[game.packName as keyof typeof questionPacks]?.questions || [];
       const results = playerAAnswers.map((ansA: { questionId: string, answer: string }) => {
         const question = originalQuestions.find(q => q.id === ansA.questionId);
@@ -35,7 +33,6 @@ export async function GET(
       return NextResponse.json({ isComplete: false, results });
     }
 
-    // ... (Rest der Logik für die finale Auswertung bleibt gleich)
     let matches = 0;
     const detailedResults = game.questions.map((question: Question) => {
       const answerA = playerAAnswers.find((a: any) => a.questionId === question.id)?.answer;

@@ -1,4 +1,4 @@
-// app/ergebnis/[id]/page.tsx - FINALE VERSION MIT POLLING
+// app/ergebnis/[id]/page.tsx
 
 "use client";
 
@@ -6,7 +6,6 @@ import { useParams } from 'next/navigation';
 import { useEffect, useState, useRef } from 'react';
 import './ergebnis.css';
 
-// Definieren, wie die Ergebnis-Daten aussehen
 interface ErgebnisZeile {
   questionText: string;
   playerA_answer: string;
@@ -24,7 +23,7 @@ export default function ErgebnisSeite() {
   const gameId = params.id as string;
   const [ergebnisse, setErgebnisse] = useState<ErgebnisDaten | null>(null);
   const [isLoading, setIsLoading] = useState(true);
-  const intervalRef = useRef<NodeJS.Timeout | null>(null); // Referenz für unser Polling-Interval
+  const intervalRef = useRef<NodeJS.Timeout | null>(null);
 
   useEffect(() => {
     if (!gameId) return;
@@ -32,38 +31,27 @@ export default function ErgebnisSeite() {
     const fetchResults = async () => {
       try {
         const response = await fetch(`/api/games/${gameId}/results`);
-        if (!response.ok) return; // Bei Fehler einfach beim nächsten Versuch erneut probieren
+        if (!response.ok) return;
 
         const data: ErgebnisDaten = await response.json();
         
         setErgebnisse(data);
         setIsLoading(false);
 
-        // Wenn das Spiel komplett ist, stoppen wir das Polling.
         if (data.isComplete) {
-          if (intervalRef.current) {
-            clearInterval(intervalRef.current);
-          }
+          if (intervalRef.current) clearInterval(intervalRef.current);
         }
       } catch (error) {
         console.error("Fehler beim Abrufen der Ergebnisse:", error);
-        if (intervalRef.current) {
-          clearInterval(intervalRef.current);
-        }
+        if (intervalRef.current) clearInterval(intervalRef.current);
       }
     };
 
-    // Führe den ersten Abruf sofort aus
     fetchResults();
-
-    // Starte das Polling: Rufe fetchResults alle 3 Sekunden auf
     intervalRef.current = setInterval(fetchResults, 3000);
 
-    // Aufräum-Funktion: Stoppt das Polling, wenn die Seite verlassen wird
     return () => {
-      if (intervalRef.current) {
-        clearInterval(intervalRef.current);
-      }
+      if (intervalRef.current) clearInterval(intervalRef.current);
     };
   }, [gameId]);
 
@@ -71,10 +59,9 @@ export default function ErgebnisSeite() {
     return <div className="ergebnis-container"><h1>Ergebnisse werden geladen...</h1></div>;
   }
   if (!ergebnisse) {
-    return <div className="ergebnis-container"><h1>Keine Ergebnisse gefunden oder das Spiel ist abgelaufen.</h1></div>;
+    return <div className="ergebnis-container"><h1>Keine Ergebnisse gefunden.</h1></div>;
   }
 
-  // ANZEIGE FÜR DEN WARTE-MODUS
   if (!ergebnisse.isComplete) {
     return (
       <div className="ergebnis-container">
@@ -98,7 +85,6 @@ export default function ErgebnisSeite() {
     );
   }
 
-  // ANZEIGE FÜR DIE FINALE AUSWERTUNG
   return (
     <div className="ergebnis-container">
       <h1>Euer Ergebnis!</h1>
