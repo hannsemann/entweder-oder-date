@@ -1,0 +1,188 @@
+/* app/spiel/[id]/spiel.css - FINALE VERSION */
+
+/* Haupt-Container für die Spiel-Seite */
+.spiel-container {
+  display: flex;
+  flex-direction: column;
+  height: 100%; 
+  width: 100%;
+  background-color: #1a1a1a;
+  color: #f0f0f0;
+}
+
+/* --- Lade- & Fehlertexte --- */
+.lade-text {
+  flex: 1;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  font-family: 'Special Elite', cursive;
+  font-size: 1.5rem;
+  color: #f7ff00;
+}
+
+
+/* --- Fortschrittsbalken --- */
+.progress-bar-container {
+  flex-shrink: 0;
+  height: 8px;
+  background-color: #333;
+}
+.progress-bar {
+  height: 100%;
+  background-color: #f7ff00;
+  transition: width 0.5s ease-in-out;
+}
+
+
+/* --- Frage-Bereich --- */
+.frage-main {
+  flex: 1; 
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1rem;
+  overflow: auto; 
+}
+.frage-text {
+  text-align: center;
+  font-family: 'Inter', sans-serif;
+  font-size: clamp(2rem, 6vw, 3.5rem);
+  font-weight: 700;
+}
+
+
+/* --- Antwort-Buttons --- */
+.antwort-grid {
+  display: flex;
+  flex-shrink: 0;
+}
+.antwort-button {
+  flex: 1;
+  padding: 2.5rem 1rem;
+  background-color: #222;
+  border: none;
+  border-top: 2px solid #444;
+  color: #f0f0f0;
+  font-family: 'Special Elite', cursive;
+  font-size: clamp(1.5rem, 4vw, 2rem);
+  cursor: pointer;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  text-align: center;
+  transition: background-color 0.2s ease;
+}
+.antwort-button:first-child {
+  border-right: 1px solid #444;
+}
+.antwort-button:hover {
+  background-color: #f7ff00;
+  color: #1a1a1a;
+}
+
+
+/* --- Modal & Einladungs-Pop-up --- */
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.7);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+}
+.modal-content {
+  background-color: #222;
+  padding: 2rem;
+  border-radius: 10px;
+  border: 1px solid #444;
+  text-align: center;
+  width: 90%;
+  max-width: 450px;
+  display: flex;
+  flex-direction: column;
+  gap: 1.2rem;
+}
+.modal-content h2 {
+  font-family: 'Special Elite', cursive;
+  font-size: 2rem;
+  color: #f7ff00;
+  margin: 0;
+}
+.modal-content p {
+  font-size: 1rem;
+  line-height: 1.5;
+  opacity: 0.8;
+  margin: 0;
+}
+.link-container {
+  display: flex;
+  width: 100%;
+}
+.link-container input {
+  flex-grow: 1;
+  margin: 0;
+  padding: 0.8rem;
+  background-color: #333;
+  border: 1px solid #555;
+  color: #f0f0f0;
+  text-align: center;
+  border-radius: 5px 0 0 5px;
+  font-family: 'Inter', sans-serif;
+  font-size: 1rem;
+}
+.copy-button {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 0.8rem;
+  background-color: #f7ff00; /* NEU: Hintergrund ist jetzt gelb */
+  border: 1px solid #f7ff00; /* Gelber Rand */
+  border-left: none;
+  border-radius: 0 5px 5px 0;
+  cursor: pointer;
+  color: #1a1a1a; /* NEU: Icon-Farbe ist jetzt dunkel */
+  transition: opacity 0.2s ease;
+}
+.copy-button:hover {
+  opacity: 0.8; /* Leichte Transparenz beim Hovern */
+}
+.action-buttons {
+  display: flex;
+  justify-content: center;
+  width: 100%;
+  margin-top: 1rem;
+}
+.close-button {
+  background-color: #f7ff00;
+  color: #1a1a1a;
+  border: none;
+  font-weight: bold;
+  padding: 0.8rem 1.5rem;
+  font-size: 1rem;
+  border-radius: 5px;
+  cursor: pointer;
+}
+.copy-toast {
+  position: fixed;
+  bottom: 2rem;
+  left: 50%;
+  transform: translateX(-50%) translateY(100px);
+  background-color: #f7ff00;
+  color: #1a1a1a;
+  padding: 0.8rem 1.5rem;
+  border-radius: 50px;
+  font-weight: bold;
+  z-index: 2000;
+  opacity: 0;
+  transition: transform 0.3s ease-in-out, opacity 0.3s ease-in-out;
+}
+.copy-toast.show {
+  opacity: 1;
+  transform: translateX(-50%) translateY(0);
+}

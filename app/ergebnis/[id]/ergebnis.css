@@ -1,0 +1,113 @@
+/* app/ergebnis/[id]/ergebnis.css */
+
+.ergebnis-container {
+  width: 100%;
+  max-width: 800px;
+  margin: 0 auto;
+  padding: 2rem;
+  text-align: center;
+}
+
+.ergebnis-container h1 {
+  font-family: 'Special Elite', cursive;
+  font-size: 3rem;
+  color: #f7ff00;
+}
+
+.ergebnis-liste {
+  list-style: none;
+  padding: 0;
+  margin: 2rem 0;
+  text-align: left;
+  border: 2px solid #333;
+  border-radius: 10px;
+  overflow: hidden;
+}
+
+.ergebnis-item {
+  padding: 1rem 1.5rem;
+  background-color: #222;
+  border-bottom: 2px solid #333;
+}
+.ergebnis-item:last-child {
+  border-bottom: none;
+}
+
+.ergebnis-item strong {
+  font-family: 'Special Elite', cursive;
+  color: #f7ff00;
+  margin-right: 0.5rem;
+}
+
+.warte-box {
+  margin-top: 3rem;
+  padding: 2rem;
+  border: 2px dashed #444;
+  border-radius: 10px;
+}
+
+/* Stile für die neuen Elemente in der Ergebnisliste */
+.ergebnis-item {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.5rem;
+}
+
+.ergebnis-item .question-text {
+  font-size: 1.1rem;
+  font-weight: bold;
+  opacity: 0.8;
+}
+
+.ergebnis-item .your-answer strong {
+  color: #f0f0f0; /* Deine Antwort in normaler Farbe */
+  background-color: #333;
+  padding: 0.2rem 0.5rem;
+  border-radius: 5px;
+}
+
+.ergebnis-item .date-answer strong {
+  color: #888; /* Platzhalter-Text ausgegraut */
+}
+
+.antworten-zeile {
+  display: flex;
+  justify-content: space-between;
+  width: 100%;
+  margin-top: 0.5rem;
+}
+
+/* Stile für die finale Auswertungs-Ansicht */
+.match-score {
+  font-family: 'Special Elite', cursive;
+  font-size: 4rem;
+  color: #f7ff00;
+  margin: 1rem 0;
+}
+
+.ergebnis-liste.final .ergebnis-item {
+  transition: background-color 0.3s ease;
+}
+
+/* So heben wir Übereinstimmungen und Unterschiede hervor */
+.ergebnis-item.match {
+  background-color: rgba(247, 255, 0, 0.1); /* Leicht gelblich */
+  border-left: 5px solid #f7ff0_0;
+}
+
+.ergebnis-item.no-match {
+  background-color: rgba(255, 255, 255, 0.05);
+  opacity: 0.7;
+}
+
+.antworten-zeile.final {
+  gap: 2rem; /* Mehr Abstand zwischen den Antworten */
+}
+
+.date-answer strong {
+    color: #f0f0f0; /* Die Antwort des Dates jetzt auch in normaler Farbe */
+    background-color: #333;
+    padding: 0.2rem 0.5rem;
+    border-radius: 5px;
+}

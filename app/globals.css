@@ -1,0 +1,120 @@
+/* app/globals.css - FINALE VERSION INKL. KARTEN- & LOGO-FIX */
+
+/* Notwendige Imports für die Schriften stehen ganz oben */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;700&family=Special+Elite&display=swap');
+
+/* 1. CSS-Reset und App-Basis */
+*, *::before, *::after {
+  box-sizing: border-box;
+}
+html, body {
+  margin: 0;
+  padding: 0;
+  height: 100%;
+  width: 100%;
+  font-family: 'Inter', sans-serif;
+  background-color: #1a1a1a;
+  color: #f0f0f0;
+}
+
+/* 2. Haupt-Layout-Struktur */
+body {
+  display: flex;
+  flex-direction: column;
+}
+.main-content {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.site-header {
+  flex-shrink: 0;
+  padding: 1rem 2rem;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+/* 3. Stile, die NUR für die Startseite gelten */
+.start-page-layout {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  padding: 2rem;
+  width: 100%;
+}
+.start-page-layout .title {
+  font-family: 'Special Elite', cursive;
+  font-size: 4rem;
+  margin: 0 0 1rem 0;
+  text-align: center;
+  color: #f7ff00;
+}
+.start-page-layout .description {
+  text-align: center;
+  margin-top: 1rem;
+  margin-bottom: 3rem;
+  font-size: 1.2rem;
+  line-height: 1.5;
+  max-width: 600px;
+}
+.start-page-layout .grid {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 1.5rem;
+  max-width: 900px;
+}
+
+/* KORREKTUR für die Karten: Feste Höhe und Flexbox, um den Umbruch zu verhindern */
+.start-page-layout .card {
+  text-decoration: none;
+  color: inherit;
+  padding: 1.5rem;
+  border: 2px solid #444;
+  border-radius: 10px;
+  width: 280px; /* Etwas breiter für mehr Platz */
+  min-height: 240px; /* Feste Mindesthöhe für alle Karten */
+  cursor: pointer;
+  display: flex; /* WICHTIG: Macht die Karte zum Flex-Container */
+  flex-direction: column; /* Stapelt die Inhalte (h2, p) */
+  transition: transform 0.2s ease-in-out, border-color 0.2s ease-in-out;
+}
+.start-page-layout .card:hover {
+  border-color: #f7ff00;
+  transform: translateY(-5px);
+}
+.start-page-layout .card h2 {
+  font-family: 'Special Elite', cursive;
+  margin: 0 0 0.5rem 0;
+  font-size: 1.5rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+.start-page-layout .card p {
+    flex-grow: 1; /* Lässt den Text den restlichen Platz füllen */
+    margin: 0;
+    font-size: 1rem;
+    line-height: 1.4;
+    opacity: 0.8;
+}
+
+/* 4. KORREKTUR für die Logo-Animation: Schneller und stärker */
+@keyframes logo-pump {
+  0% {
+    transform: scale(1);
+  }
+  30% {
+    transform: scale(1.08); /* Stärkerer "Pump" (vorher 1.03) */
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+.logo-image {
+  animation: logo-pump 1.5s ease-in-out infinite; /* Schnellerer "Herzschlag" (vorher 5s) */
+}
