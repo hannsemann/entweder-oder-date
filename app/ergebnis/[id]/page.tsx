@@ -1,136 +1,135 @@
-// app/spiel/[id]/page.tsx - FINALE VERSION
+// app/ergebnis/[id]/page.tsx - FINALE VERSION MIT POLLING
 
-"use client"; 
+"use client";
 
-import { useState, useEffect } from 'react';
-import { useParams, useRouter } from 'next/navigation';
+import { useParams } from 'next/navigation';
+import { useEffect, useState, useRef } from 'react';
 import './ergebnis.css';
-import Image from 'next/image';
-import type { Question } from '@/lib/questions';
 
-interface GameData {
-  questions: Question[];
+// Definieren, wie die Ergebnis-Daten aussehen
+interface ErgebnisZeile {
+  questionText: string;
+  playerA_answer: string;
+  playerB_answer?: string;
+  isMatch: boolean | null;
+}
+interface ErgebnisDaten {
+  isComplete: boolean;
+  matchPercentage?: number;
+  results: ErgebnisZeile[];
 }
 
-export default function SpielSeite() {
+export default function ErgebnisSeite() {
   const params = useParams();
-  const router = useRouter();
   const gameId = params.id as string;
-
-  const [isModalOpen, setIsModalOpen] = useState(true);
-  const [isCopied, setIsCopied] = useState(false);
-  const [game, setGame] = useState<GameData | null>(null);
-  const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
-  const [error, setError] = useState<string | null>(null);
+  const [ergebnisse, setErgebnisse] = useState<ErgebnisDaten | null>(null);
   const [isLoading, setIsLoading] = useState(true);
-  const [playerId] = useState(() => Math.random().toString(36).substring(2, 10));
+  const [error, setError] = useState<string | null>(null);
+  const intervalRef = useRef<NodeJS.Timeout | null>(null); // Referenz für unser Polling-Interval
 
   useEffect(() => {
-    if (gameId) {
-      const fetchGameData = async () => {
-        setIsLoading(true);
-        try {
-          const response = await fetch(`/api/games/${gameId}`);
-          if (!response.ok) {
-            const errorData = await response.json();
-            throw new Error(errorData.error || 'Spiel konnte nicht geladen werden.');
-          }
-          const data = await response.json();
-          setGame(data);
-        } catch (err: any) {
-          setError(err.message);
-        } finally {
-          setIsLoading(false);
+    if (!gameId) {
+        setIsLoading(false);
+        setError("Keine Spiel-ID gefunden.");
+        return;
+    };
+
+    const fetchResults = async () => {
+      try {
+        const response = await fetch(`/api/games/${gameId}/results`);
+        if (!response.ok) {
+          // Wir versuchen, eine spezifischere Fehlermeldung zu bekommen
+          const errorData = await response.json().catch(() => null);
+          throw new Error(errorData?.error || 'Ergebnisse konnten nicht vom Server geladen werden.');
         }
-      };
-      fetchGameData();
-    }
+
+        const data: ErgebnisDaten = await response.json();
+        
+        setErgebnisse(data);
+        // Setze den Ladezustand nur beim ersten erfolgreichen Laden auf false
+        if(isLoading) setIsLoading(false);
+
+        // Wenn das Spiel komplett ist, stoppen wir das Polling.
+        if (data.isComplete) {
+          if (intervalRef.current) {
+            clearInterval(intervalRef.current);
+          }
+        }
+      } catch (err: any) {
+        console.error("Fehler beim Abrufen der Ergebnisse:", err);
+        setError(err.message);
+        if (intervalRef.current) {
+          clearInterval(intervalRef.current);
+        }
+        setIsLoading(false);
+      }
+    };
+
+    // Führe den ersten Abruf sofort aus
+    fetchResults();
+
+    // Starte das Polling: Rufe fetchResults alle 3 Sekunden auf
+    intervalRef.current = setInterval(fetchResults, 3000);
+
+    // Aufräum-Funktion: Stoppt das Polling, wenn die Seite verlassen wird
+    return () => {
+      if (intervalRef.current) {
+        clearInterval(intervalRef.current);
+      }
+    };
   }, [gameId]);
 
-  const shareLink = typeof window !== 'undefined' ? `${window.location.origin}/spiel/${gameId}` : '';
-
-  const copyLinkToClipboard = () => {
-    navigator.clipboard.writeText(shareLink).then(() => {
-      setIsCopied(true);
-      setTimeout(() => setIsCopied(false), 2000);
-    });
-  };
-
-  const handleCloseModal = () => setIsModalOpen(false);
-
-  const handleAnswer = async (answer: string) => {
-    if (!game) return;
-    const questionId = game.questions[currentQuestionIndex].id;
-    try {
-      await fetch(`/api/games/${gameId}/answer`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ playerId, questionId, answer }),
-      });
-    } catch (error) {
-      console.error("Fehler beim Senden der Antwort:", error);
-    }
-    if (currentQuestionIndex < game.questions.length - 1) {
-      setCurrentQuestionIndex(currentQuestionIndex + 1);
-    } else {
-      router.push(`/ergebnis/${gameId}`);
-    }
-  };
-
   if (isLoading) {
-    return <div className="spiel-container"><div className="lade-text">Spiel wird geladen...</div></div>;
+    return <div className="ergebnis-container"><div className="lade-text">Ergebnisse werden geladen...</div></div>;
   }
   if (error) {
-    return <div className="spiel-container"><div className="lade-text">Fehler: {error}</div></div>;
+    return <div className="ergebnis-container"><div className="lade-text">Fehler: {error}</div></div>;
   }
-  if (!game) {
-    return <div className="spiel-container"><div className="lade-text">Keine Spieldaten gefunden.</div></div>;
+  if (!ergebnisse) {
+    return <div className="ergebnis-container"><div className="lade-text">Keine Spieldaten für dieses Spiel gefunden.</div></div>;
   }
-  
-  const currentQuestion = game.questions[currentQuestionIndex];
-  if (!currentQuestion) {
-    // Dieser Fall wird jetzt durch die Weiterleitung in handleAnswer abgedeckt,
-    // ist aber eine gute Absicherung.
-    return <div className="spiel-container"><div className="lade-text">Du hast alle Fragen beantwortet!</div></div>;
-  }
-  
-  const progress = ((currentQuestionIndex + 1) / game.questions.length) * 100;
 
-  if (isModalOpen) {
+  // ANZEIGE FÜR DEN WARTE-MODUS
+  if (!ergebnisse.isComplete) {
     return (
-      <>
-        <div className="modal-overlay">
-          <div className="modal-content">
-            <h2>Dein Date einladen!</h2>
-            <p>Kopier diesen Link und schick ihn an die Person, mit der du spielen willst.</p>
-            <div className="link-container">
-              <input type="text" value={shareLink} readOnly />
-              <button className="copy-button" onClick={copyLinkToClipboard}>
-                {isCopied ? <Image src="/check-icon.svg" alt="Kopiert!" width={20} height={20} /> : <Image src="/copy-icon.svg" alt="Kopieren" width={20} height={20} />}
-              </button>
-            </div>
-            <div className="action-buttons">
-              <button onClick={handleCloseModal} className="close-button">Spiel starten!</button>
-            </div>
-          </div>
+      <div className="ergebnis-container">
+        <h1>Du bist fertig!</h1>
+        <p>Hier ist eine Zusammenfassung deiner Antworten:</p>
+        <ul className="ergebnis-liste">
+          {ergebnisse.results.map((r, index) => (
+            <li className="ergebnis-item" key={index}>
+              <span className="question-text">{r.questionText}</span>
+              <div className="antworten-zeile">
+                <span className="your-answer">Deine Antwort: <strong>{r.playerA_answer}</strong></span>
+              </div>
+            </li>
+          ))}
+        </ul>
+        <div className="warte-box">
+          <h2>Warte auf dein Date...</h2>
+          <p>Die Seite aktualisiert sich automatisch, sobald die Ergebnisse da sind.</p>
         </div>
-        <div className={`copy-toast ${isCopied ? 'show' : ''}`}>Link kopiert!</div>
-      </>
+      </div>
     );
   }
-  
+
+  // ANZEIGE FÜR DIE FINALE AUSWERTUNG
   return (
-    <div className="spiel-container">
-      <div className="progress-bar-container">
-        <div className="progress-bar" style={{ width: `${progress}%` }}></div>
-      </div>
-      <main className="frage-main">
-        <h1 className="frage-text">{currentQuestion.optionA} oder {currentQuestion.optionB}?</h1>
-      </main>
-      <div className="antwort-grid">
-        <button className="antwort-button" onClick={() => handleAnswer(currentQuestion.optionA)}>{currentQuestion.optionA}</button>
-        <button className="antwort-button" onClick={() => handleAnswer(currentQuestion.optionB)}>{currentQuestion.optionB}</button>
-      </div>
+    <div className="ergebnis-container">
+      <h1>Euer Ergebnis!</h1>
+      <div className="match-score">{ergebnisse.matchPercentage}% Übereinstimmung</div>
+      <p>Das sagen eure Antworten im Detail:</p>
+      <ul className="ergebnis-liste final">
+        {ergebnisse.results.map((r, index) => (
+          <li className={`ergebnis-item ${r.isMatch ? 'match' : 'no-match'}`} key={index}>
+            <span className="question-text">{r.questionText}</span>
+            <div className="antworten-zeile final">
+              <span className="your-answer">Du: <strong>{r.playerA_answer}</strong></span>
+              <span className="date-answer">Dein Date: <strong>{r.playerB_answer}</strong></span>
+            </div>
+          </li>
+        ))}
+      </ul>
     </div>
   );
 }
