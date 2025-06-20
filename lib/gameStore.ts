@@ -1,5 +1,3 @@
-// lib/gameStore.ts - ROBUSTE VERSION
-
 // Wir nutzen das globale Objekt von Node.js, um unseren Speicher abzulegen.
 // Dieses Objekt überlebt die Hot-Reloads des Entwicklungs-Servers.
 const globalForGames = globalThis as unknown as {
