@@ -13,7 +13,7 @@ export default function ErgebnisSeite() {
   const gameId = params.id as string;
   const [ergebnisse, setErgebnisse] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState(null);
+  const [error, setError] = useState<string | null>(null);
   const intervalRef = useRef(null);
 
   useEffect(() => {
