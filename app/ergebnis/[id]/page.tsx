@@ -4,7 +4,7 @@
 
 import { useState, useEffect } from 'react';
 import { useParams, useRouter } from 'next/navigation';
-import './spiel.css';
+import './ergebnis.css';
 import Image from 'next/image';
 import type { Question } from '@/lib/questions';
 
