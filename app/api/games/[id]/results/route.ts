@@ -1,4 +1,4 @@
-// app/api/games/[id]/results/route.ts
+// app/api/games/[id]/results/route.ts - FINALE VERSION
 
 import { NextResponse } from 'next/server';
 import { games } from '@/lib/gameStore';
