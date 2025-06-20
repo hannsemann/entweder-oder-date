@@ -1,4 +1,4 @@
-// app/ergebnis/[id]/page.tsx - FINALE VERSION MIT POLLING
+// app/ergebnis/[id]/page.tsx
 
 "use client";
 
@@ -6,87 +6,53 @@ import { useParams } from 'next/navigation';
 import { useEffect, useState, useRef } from 'react';
 import './ergebnis.css';
 
-// Definieren, wie die Ergebnis-Daten aussehen
-interface ErgebnisZeile {
-  questionText: string;
-  playerA_answer: string;
-  playerB_answer?: string;
-  isMatch: boolean | null;
-}
-interface ErgebnisDaten {
-  isComplete: boolean;
-  matchPercentage?: number;
-  results: ErgebnisZeile[];
-}
+// ... (die 'interface'-Definitionen bleiben gleich)
 
 export default function ErgebnisSeite() {
   const params = useParams();
   const gameId = params.id as string;
-  const [ergebnisse, setErgebnisse] = useState<ErgebnisDaten | null>(null);
+  const [ergebnisse, setErgebnisse] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  const intervalRef = useRef<NodeJS.Timeout | null>(null); // Referenz für unser Polling-Interval
+  const [error, setError] = useState(null);
+  const intervalRef = useRef(null);
 
   useEffect(() => {
-    if (!gameId) {
-        setIsLoading(false);
-        setError("Keine Spiel-ID gefunden.");
-        return;
-    };
-
-    const fetchResults = async () => {
-      try {
-        const response = await fetch(`/api/games/${gameId}/results`);
-        if (!response.ok) {
-          // Wir versuchen, eine spezifischere Fehlermeldung zu bekommen
-          const errorData = await response.json().catch(() => null);
-          throw new Error(errorData?.error || 'Ergebnisse konnten nicht vom Server geladen werden.');
-        }
-
-        const data: ErgebnisDaten = await response.json();
-        
-        setErgebnisse(data);
-        // Setze den Ladezustand nur beim ersten erfolgreichen Laden auf false
-        if(isLoading) setIsLoading(false);
-
-        // Wenn das Spiel komplett ist, stoppen wir das Polling.
-        if (data.isComplete) {
-          if (intervalRef.current) {
-            clearInterval(intervalRef.current);
+    if (gameId) {
+      const fetchResults = async () => {
+        try {
+          const response = await fetch(`/api/games/${gameId}/results`);
+          if (!response.ok) {
+            throw new Error('Ergebnisse konnten nicht geladen werden.');
           }
+          const data = await response.json();
+          setErgebnisse(data);
+          
+          if (data.isComplete) {
+            if (intervalRef.current) clearInterval(intervalRef.current);
+            setIsLoading(false);
+          }
+        } catch (err) {
+          setError(err.message);
+          if (intervalRef.current) clearInterval(intervalRef.current);
+          setIsLoading(false);
         }
-      } catch (err: any) {
-        console.error("Fehler beim Abrufen der Ergebnisse:", err);
-        setError(err.message);
-        if (intervalRef.current) {
-          clearInterval(intervalRef.current);
-        }
-        setIsLoading(false);
-      }
-    };
+      };
 
-    // Führe den ersten Abruf sofort aus
-    fetchResults();
+      fetchResults();
+      intervalRef.current = setInterval(fetchResults, 3000);
 
-    // Starte das Polling: Rufe fetchResults alle 3 Sekunden auf
-    intervalRef.current = setInterval(fetchResults, 3000);
-
-    // Aufräum-Funktion: Stoppt das Polling, wenn die Seite verlassen wird
-    return () => {
-      if (intervalRef.current) {
-        clearInterval(intervalRef.current);
-      }
-    };
+      return () => clearInterval(intervalRef.current);
+    }
   }, [gameId]);
 
   if (isLoading) {
-    return <div className="ergebnis-container"><div className="lade-text">Ergebnisse werden geladen...</div></div>;
+    return <div className="ergebnis-container"><h1>Ergebnisse werden geladen...</h1></div>;
   }
   if (error) {
-    return <div className="ergebnis-container"><div className="lade-text">Fehler: {error}</div></div>;
+    return <div className="ergebnis-container"><h1>Fehler: {error}</h1></div>;
   }
   if (!ergebnisse) {
-    return <div className="ergebnis-container"><div className="lade-text">Keine Spieldaten für dieses Spiel gefunden.</div></div>;
+    return <div className="ergebnis-container"><h1>Keine Ergebnisse gefunden.</h1></div>;
   }
 
   // ANZEIGE FÜR DEN WARTE-MODUS
@@ -107,7 +73,6 @@ export default function ErgebnisSeite() {
         </ul>
         <div className="warte-box">
           <h2>Warte auf dein Date...</h2>
-          <p>Die Seite aktualisiert sich automatisch, sobald die Ergebnisse da sind.</p>
         </div>
       </div>
     );

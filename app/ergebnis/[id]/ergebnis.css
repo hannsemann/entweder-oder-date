@@ -32,6 +32,7 @@
   flex-direction: column;
   align-items: flex-start;
   gap: 0.5rem;
+  transition: background-color 0.3s ease, opacity 0.3s ease;
 }
 .ergebnis-item:last-child {
   border-bottom: none;
@@ -50,15 +51,17 @@
   margin-top: 0.5rem;
 }
 
-.ergebnis-item .your-answer strong {
-  color: #f0f0f0;
+.your-answer strong, .date-answer strong {
   background-color: #333;
   padding: 0.2rem 0.5rem;
   border-radius: 5px;
 }
 
-.ergebnis-item .date-answer strong {
-  color: #888;
+.date-answer strong {
+  color: #f0f0f0;
+}
+.your-answer strong {
+  color: #f0f0f0;
 }
 
 .warte-box {
@@ -77,8 +80,7 @@
 }
 
 .ergebnis-liste.final .ergebnis-item {
-  transition: background-color 0.3s ease;
-  border-left: 5px solid transparent; /* Vorbereitung für die farbliche Markierung */
+  border-left: 5px solid transparent;
 }
 
 .ergebnis-item.match {
@@ -92,11 +94,4 @@
 
 .antworten-zeile.final {
   gap: 2rem;
-}
-
-.date-answer strong {
-    color: #f0f0f0;
-    background-color: #333;
-    padding: 0.2rem 0.5rem;
-    border-radius: 5px;
 }
