@@ -1,4 +1,4 @@
-// app/api/games/[id]/results/route.ts - FINALE VERSION
+// app/api/games/[id]/results/route.ts
 
 import { NextResponse } from 'next/server';
 import { games } from '@/lib/gameStore';
@@ -28,9 +28,12 @@ export async function GET(
       const results = playerAAnswers.map((ansA: { questionId: string, answer: string }) => {
         const question = originalQuestions.find(q => q.id === ansA.questionId);
         const questionText = question ? `${question.optionA} oder ${question.optionB}?` : 'Unbekannte Frage';
-        return { questionText, playerA_answer: ansA.answer };
+        return {
+          questionText: questionText,
+          playerA_answer: ansA.answer,
+        };
       });
-      return NextResponse.json({ isComplete: false, results });
+      return NextResponse.json({ isComplete: false, results: results });
     }
 
     let matches = 0;
@@ -38,18 +41,22 @@ export async function GET(
       const answerA = playerAAnswers.find((a: any) => a.questionId === question.id)?.answer;
       const answerB = playerBAnswers.find((a: any) => a.questionId === question.id)?.answer;
       const isMatch = answerA === answerB;
-      if (isMatch) matches++;
+      if (isMatch) {
+        matches++;
+      }
       return {
         questionText: `${question.optionA} oder ${question.optionB}?`,
         playerA_answer: answerA,
         playerB_answer: answerB,
-        isMatch,
+        isMatch: isMatch,
       };
     });
+
     const matchPercentage = Math.round((matches / totalQuestions) * 100);
+
     return NextResponse.json({
       isComplete: true,
-      matchPercentage,
+      matchPercentage: matchPercentage,
       results: detailedResults,
     });
 

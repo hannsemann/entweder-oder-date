@@ -1,4 +1,4 @@
-// app/ergebnis/[id]/page.tsx - FINALE VERSION
+// app/ergebnis/[id]/page.tsx
 
 "use client";
 
@@ -27,15 +27,18 @@ export default function ErgebnisSeite() {
   const intervalRef = useRef<NodeJS.Timeout | null>(null);
 
   useEffect(() => {
-    if (!gameId) return;
+    if (!gameId) {
+      setIsLoading(false);
+      setError("Keine Spiel-ID gefunden.");
+      return;
+    }
 
     const fetchResults = async () => {
       try {
         const response = await fetch(`/api/games/${gameId}/results`);
         if (!response.ok) {
-            // Versuche, eine spezifischere Fehlermeldung zu bekommen
-            const errorData = await response.json().catch(() => ({ error: 'Unbekannter Serverfehler' }));
-            throw new Error(errorData.error);
+          const errorData = await response.json().catch(() => ({ error: 'Unbekannter Serverfehler' }));
+          throw new Error(errorData.error);
         }
 
         const data: ErgebnisDaten = await response.json();
@@ -47,9 +50,9 @@ export default function ErgebnisSeite() {
         }
       } catch (err) {
         if (err instanceof Error) {
-            setError(err.message);
+          setError(err.message);
         } else {
-            setError('Ein unerwarteter Fehler ist aufgetreten.');
+          setError('Ein unerwarteter Fehler ist aufgetreten.');
         }
         if (intervalRef.current) clearInterval(intervalRef.current);
       } finally {
@@ -79,13 +82,50 @@ export default function ErgebnisSeite() {
   if (error) {
     return <div className="ergebnis-container"><h1>Fehler: {error}</h1></div>;
   }
+
   if (!ergebnisse) {
-    return <div className="ergebnis-container"><h1>Keine Ergebnisse gefunden.</h1></div>;
+    return <div className="ergebnis-container"><h1>Keine Ergebnisse für dieses Spiel gefunden.</h1></div>;
   }
 
   if (!ergebnisse.isComplete) {
-    // ... Warte-Modus
+    return (
+        <div className="ergebnis-container">
+          <h1>Du bist fertig!</h1>
+          <p>Hier ist eine Zusammenfassung deiner Antworten:</p>
+          <ul className="ergebnis-liste">
+            {ergebnisse.results.map((r, index) => (
+              <li className="ergebnis-item" key={index}>
+                <span className="question-text">{r.questionText}</span>
+                <div className="antworten-zeile">
+                  <span className="your-answer">Deine Antwort: <strong>{r.playerA_answer}</strong></span>
+                </div>
+              </li>
+            ))}
+          </ul>
+          <div className="warte-box">
+            <h2>Warte auf dein Date...</h2>
+            <p>Die Seite aktualisiert sich automatisch, sobald die Ergebnisse da sind.</p>
+          </div>
+        </div>
+      );
   }
 
-  // ... Finale Auswertung
+  return (
+    <div className="ergebnis-container">
+      <h1>Euer Ergebnis!</h1>
+      <div className="match-score">{ergebnisse.matchPercentage}% Übereinstimmung</div>
+      <p>Das sagen eure Antworten im Detail:</p>
+      <ul className="ergebnis-liste final">
+        {ergebnisse.results.map((r, index) => (
+          <li className={`ergebnis-item ${r.isMatch ? 'match' : 'no-match'}`} key={index}>
+            <span className="question-text">{r.questionText}</span>
+            <div className="antworten-zeile final">
+              <span className="your-answer">Du: <strong>{r.playerA_answer}</strong></span>
+              <span className="date-answer">Dein Date: <strong>{r.playerB_answer}</strong></span>
+            </div>
+          </li>
+        ))}
+      </ul>
+    </div>
+  );
 }
